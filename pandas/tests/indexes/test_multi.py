@@ -2600,3 +2600,27 @@ class TestMultiIndex(Base, tm.TestCase):
             pd.Index(li, name='abc')
         with assertRaises(ValueError):
             pd.Index(li, name='a')
+
+    def test_rename_passing_dict(self):
+        new_names = ['first', 'index_2']
+        rename_dict = {'second':'index_2', 'non_existent':'a'}
+        old_names = ['first', 'second']
+
+        new_index = self.index.rename(rename_dict)
+        self.assertEqual(new_index.names, new_names)
+
+        self.index.rename(rename_dict, inplace=True)
+        self.assertEqual(self.index.names, new_names)
+
+    def test_rename_passing_dict_with_no_valid_keys(self):
+        rename_dict = {'foo':'not_present', 'bar':'nor_this_one'}
+        old_names = ['first', 'second']
+        new_names = old_names
+
+        new_index = self.index.rename(rename_dict)
+        self.assertEqual(new_index.names, new_names)
+
+        self.index.rename(rename_dict, inplace=True)
+        self.assertEqual(self.index.names, new_names)
+
+

@@ -1015,8 +1015,11 @@ class Index(IndexOpsMixin, StringAccessorMixin, PandasObject):
 
         Parameters
         ----------
-        names : str or sequence
+        names : str, sequence, dict
             name(s) to set
+            If dict, keys are old names, values are new values,
+            and any old name not in current level names will be skipped
+
         level : int, level name, or sequence of int/level names (default None)
             If the index is a MultiIndex (hierarchical), level(s) to set (None
             for all levels).  Otherwise level must be None
@@ -1045,6 +1048,18 @@ class Index(IndexOpsMixin, StringAccessorMixin, PandasObject):
                    labels=[[0, 0, 1, 1], [0, 1, 0, 1]],
                    names=[u'baz', u'bar'])
         """
+        if isinstance(names, dict) and level is not None:
+            raise ValueError('Level must be None if names is dict')
+
+        if isinstance(names, dict):
+            name_list = []
+            level = []
+            for old, new in names.items():
+                if old in self.names:
+                    name_list.append(new)
+                    level.append(old)
+            names = name_list
+
         if level is not None and self.nlevels == 1:
             raise ValueError('Level must be None for non-MultiIndex')
 
@@ -1074,8 +1089,10 @@ class Index(IndexOpsMixin, StringAccessorMixin, PandasObject):
 
         Parameters
         ----------
-        name : str or list
-            name to set
+        name : str, list, or dict
+            names to set.
+            If dict, keys are old names, values are new values,
+            and any old name not in current level names will be skipped
         inplace : bool
             if True, mutates in place
 
@@ -1083,7 +1100,17 @@ class Index(IndexOpsMixin, StringAccessorMixin, PandasObject):
         -------
         new index (of same type and class...etc) [if inplace, returns None]
         """
-        return self.set_names([name], inplace=inplace)
+        if isinstance(name, dict):
+            if self.name in name:
+                names = [name[self.name]]
+            else:
+                names = None
+        else:
+            names = [name]
+
+        if names is None and not inplace:
+            return self
+        return self.set_names(names, inplace=inplace)
 
     def reshape(self, *args, **kwargs):
         """

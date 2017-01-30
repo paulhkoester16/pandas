@@ -1789,6 +1789,22 @@ Index([u'a', u'bb', u'ccc', u'a', u'bb', u'ccc', u'a', u'bb', u'ccc', u'a',
 
                 self.assertEqual(coerce(idx), expected)
 
+    def test_rename_passing_dict(self):
+        old_name = 'old_name'
+        new_name = 'new_name'
+        rename_dict = {old_name: new_name, 'not_seen': 'foo'}
+
+        index = self.unicodeIndex.rename(old_name)
+        new_index = index.rename(rename_dict)
+        self.assertEqual(new_index.names, [new_name])
+
+        index.rename(rename_dict, inplace=True)
+        self.assertEqual(index.names, [new_name])
+
+        index = self.unicodeIndex.rename(old_name)
+        new_index = index.rename({'not_seen': 'shouldnt_change'})
+        self.assertEqual(new_index.names, [old_name])
+
 
 class TestMixedIntIndex(Base, tm.TestCase):
     # Mostly the tests from common.py for which the results differ
@@ -2078,7 +2094,6 @@ class TestMixedIntIndex(Base, tm.TestCase):
         res = i2.intersection(i1)
 
         self.assertEqual(len(res), 0)
-
 
 if __name__ == '__main__':
     nose.runmodule(argv=[__file__, '-vvs', '-x', '--pdb', '--pdb-failure'],
